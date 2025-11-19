@@ -89,7 +89,7 @@ export default function Dashboard() {
 
           {posts.map((post) => (
             <Link key={post.id} href={`/post/${post.id}`}>
-              <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow hover:shadow-xl cursor-pointer 
+              <div className="bg-white mb-4 dark:bg-gray-800 p-4 rounded-xl shadow hover:shadow-xl cursor-pointer 
               hover:bg-gray-50 dark:hover:bg-gray-700 transition-all hover:scale-[1.01]">
 
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
