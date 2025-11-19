@@ -56,13 +56,6 @@ export default function Dashboard() {
 
           <div className="flex gap-3">
             {/* Dark Mode Button */}
-            <button
-              onClick={toggleTheme}
-              className="px-3 py-1 rounded-lg shadow bg-gray-800 dark:bg-yellow-400 
-              text-white dark:text-black transition-all hover:scale-105"
-            >
-              {theme === "light" ? "🌙 Dark" : "☀️ Light"}
-            </button>
 
             <Link href="/chat">
               <button className="bg-green-600 hover:bg-green-700 text-white px-4 py-1 rounded-lg shadow transition-all hover:scale-105">

@@ -29,28 +29,86 @@ export default function NewPost() {
   };
 
   return (
-    <main className="min-h-screen bg-gray-100 p-6 flex justify-center">
-      <div className="bg-white p-6 rounded shadow w-full max-w-md">
-        <h1 className="text-xl font-bold mb-4">Create New Post</h1>
+    <main className="min-h-screen flex items-center justify-center px-4
+      bg-gray-100 dark:bg-gray-900 transition-colors">
+      
+      <div className="
+        w-full max-w-lg p-8 rounded-2xl shadow-xl
+        bg-white dark:bg-gray-800 
+        border border-gray-200 dark:border-gray-700
+        backdrop-blur-lg transition-all duration-300
+      ">
+        
+        <h1 className="text-2xl font-extrabold mb-6 
+          text-gray-900 dark:text-white tracking-wide">
+          ✏️ Create New Post
+        </h1>
 
-        <input
-          type="text"
-          placeholder="Post Title"
-          className="w-full p-2 border rounded mb-3"
-          onChange={(e) => setTitle(e.target.value)}
-        />
+        {/* Title Input */}
+        <div className="mb-4">
+          <label className="block mb-1 text-gray-700 dark:text-gray-300 font-medium">
+            Post Title
+          </label>
+          <input
+            type="text"
+            className="
+              w-full p-3 rounded-lg border 
+              bg-gray-50 dark:bg-gray-700
+              text-gray-900 dark:text-white
+              border-gray-300 dark:border-gray-600
+              focus:ring-2 focus:ring-blue-500 
+              outline-none transition-all
+            "
+            placeholder="Enter a catchy title..."
+            onChange={(e) => setTitle(e.target.value)}
+          />
+        </div>
 
-        <textarea
-          placeholder="Write your content..."
-          className="w-full p-2 border rounded mb-3 h-40"
-          onChange={(e) => setContent(e.target.value)}
-        />
+        {/* Content Input */}
+        <div className="mb-5">
+          <label className="block mb-1 text-gray-700 dark:text-gray-300 font-medium">
+            Content
+          </label>
+          <textarea
+            className="
+              w-full p-3 rounded-lg border 
+              h-40 resize-none
+              bg-gray-50 dark:bg-gray-700
+              text-gray-900 dark:text-white
+              border-gray-300 dark:border-gray-600
+              focus:ring-2 focus:ring-blue-500 
+              outline-none transition-all
+            "
+            placeholder="Write something amazing..."
+            onChange={(e) => setContent(e.target.value)}
+          />
+        </div>
 
+        {/* Save Button */}
         <button
           onClick={savePost}
-          className="w-full py-2 bg-blue-600 text-white rounded"
+          className="
+            w-full py-3 rounded-lg 
+            bg-blue-600 hover:bg-blue-700 
+            dark:bg-blue-500 dark:hover:bg-blue-600
+            text-white font-semibold 
+            shadow-md hover:shadow-lg 
+            transition-all active:scale-95
+          "
         >
-          Save Post
+          🚀 Publish Post
+        </button>
+
+        {/* Back Button */}
+        <button
+          onClick={() => router.push("/dashboard")}
+          className="
+            w-full mt-4 py-2 text-gray-600 dark:text-gray-300 
+            hover:text-gray-900 dark:hover:text-white
+            transition-all
+          "
+        >
+          ⬅ Back to Dashboard
         </button>
       </div>
     </main>
