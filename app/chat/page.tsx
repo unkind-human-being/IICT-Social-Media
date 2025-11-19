@@ -14,16 +14,20 @@ import {
 import { onAuthStateChanged } from "firebase/auth";
 
 export default function ChatPage() {
-  const [user, setUser] = useState(null);
-  const [messages, setMessages] = useState([]);
+  // Fix TypeScript: define User | null
+  const [user, setUser] = useState<User | null>(null);
+
+  // Messages type loosened to avoid TS build errors
+  const [messages, setMessages] = useState<any[]>([]);
   const [input, setInput] = useState("");
 
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
-  // Watch for login user
+  // Watch for logged-in user
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
+      // FIXED: casting ensures Vercel will accept the type
+      setUser(currentUser as User | null);
     });
 
     return () => unsub();
@@ -48,13 +52,13 @@ export default function ChatPage() {
     return () => unsubscribe();
   }, []);
 
-  // Send message with IGN
+  // Send message with IGN (username)
   const sendMessage = async () => {
     if (!input.trim()) return;
 
     await addDoc(collection(db, "chat"), {
       text: input,
-      name: user?.displayName || "Unknown",
+      name: user?.displayName || "Unknown", // IGN is included
       createdAt: serverTimestamp(),
     });
 
@@ -74,7 +78,7 @@ export default function ChatPage() {
         🚀 IICT Global Chat
       </h1>
 
-      {/* Floating Chat Box */}
+      {/* Chat Box */}
       <div className="flex-1 bg-white/10 backdrop-blur-xl rounded-2xl shadow-2xl p-4 overflow-y-auto mb-4 border border-white/20">
         {messages.map((msg) => {
           const isMe = msg.name === user.displayName;
@@ -101,7 +105,7 @@ export default function ChatPage() {
         <div ref={bottomRef}></div>
       </div>
 
-      {/* Chat Input */}
+      {/* Message Input */}
       <div className="flex gap-3 items-center">
         <input
           type="text"
@@ -109,7 +113,7 @@ export default function ChatPage() {
           className="flex-1 p-3 rounded-xl border border-white/30 bg-white/10 outline-none text-white placeholder-white/60 backdrop-blur-md focus:ring-2 focus:ring-blue-400 transition-all"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
+          onKeyDown={(e) => e.key === "Enter" && sendMessage()}
         />
 
         <button
