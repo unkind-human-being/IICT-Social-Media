@@ -8,64 +8,102 @@ import { useRouter } from "next/navigation";
 
 export default function Register() {
   const router = useRouter();
-  const [name, setName] = useState("");      // 👈 IGN
+  const [name, setName] = useState("");       // IGN
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const registerUser = async () => {
+    if (!name || !email || !password) {
+      alert("Please fill all fields.");
+      return;
+    }
+
     try {
+      setLoading(true);
+
       const userCred = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCred.user;
 
-      // Save display name to Firebase Auth
+      // Save IGN to Firebase Auth
       await updateProfile(user, {
-        displayName: name
+        displayName: name,
       });
 
-      // Save user to Firestore (optional but good practice)
+      // Save user to Firestore
       await setDoc(doc(db, "users", user.uid), {
         name,
-        email
+        email,
+        uid: user.uid,
+        createdAt: new Date(),
       });
 
       router.push("/dashboard");
-    } catch (err) {
+    } catch (err: any) {
       alert("Registration failed: " + err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 p-5">
-      <div className="bg-white p-6 rounded-lg shadow w-full max-w-sm">
+    <div className="min-h-screen flex flex-col items-center justify-center 
+      bg-gray-100 dark:bg-gray-900 p-5 transition-all">
 
-        <h1 className="text-2xl font-bold mb-4">Register</h1>
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg 
+        w-full max-w-sm border border-gray-300 dark:border-gray-700 
+        transition-all">
 
+        <h1 className="text-3xl font-bold mb-5 text-center 
+          text-gray-900 dark:text-white">
+          Create Account
+        </h1>
+
+        {/* IGN / Display Name */}
         <input
           type="text"
           placeholder="Name / IGN"
-          className="w-full p-2 border rounded mb-3"
+          className="w-full p-3 mb-3 rounded-lg border 
+            bg-gray-50 dark:bg-gray-700 
+            text-gray-900 dark:text-white 
+            border-gray-300 dark:border-gray-600
+            outline-none focus:ring-2 focus:ring-purple-500"
           onChange={(e) => setName(e.target.value)}
         />
 
+        {/* Email */}
         <input
           type="email"
           placeholder="Email"
-          className="w-full p-2 border rounded mb-3"
+          className="w-full p-3 mb-3 rounded-lg border 
+            bg-gray-50 dark:bg-gray-700 
+            text-gray-900 dark:text-white 
+            border-gray-300 dark:border-gray-600
+            outline-none focus:ring-2 focus:ring-purple-500"
           onChange={(e) => setEmail(e.target.value)}
         />
 
+        {/* Password */}
         <input
           type="password"
           placeholder="Password"
-          className="w-full p-2 border rounded mb-3"
+          className="w-full p-3 mb-4 rounded-lg border 
+           bg-gray-50 dark:bg-gray-700
+           text-gray-900 dark:text-white
+           border-gray-300 dark:border-gray-600 
+           outline-none focus:ring-2 focus:ring-purple-500"
           onChange={(e) => setPassword(e.target.value)}
         />
 
+        {/* Register Button */}
         <button
           onClick={registerUser}
-          className="w-full py-2 bg-purple-600 text-white rounded mt-2"
+          disabled={loading}
+          className="w-full py-3 rounded-lg bg-purple-600 hover:bg-purple-700 
+            text-white font-semibold shadow-md transition-transform 
+            hover:scale-[1.02] active:scale-95 disabled:bg-purple-300"
         >
-          Register
+          {loading ? "Creating Account..." : "Register"}
         </button>
 
       </div>

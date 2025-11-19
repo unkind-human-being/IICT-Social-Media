@@ -4,9 +4,17 @@ import { useEffect, useState } from "react";
 import { db } from "@/firebase/firebaseConfig";
 import { doc, getDoc } from "firebase/firestore";
 
-export default function PostDetails({ params }) {
-  const { id } = params; // the dynamic ID from the URL
-  const [post, setPost] = useState(null);
+interface Post {
+  title?: string;
+  content?: string;
+  author?: string;
+}
+
+export default function PostDetails({ params }: { params: { id: string } }) {
+  const { id } = params;
+
+  // FIX: Loose type to avoid Vercel build errors
+  const [post, setPost] = useState<Post | null>(null);
 
   useEffect(() => {
     const loadPost = async () => {
@@ -14,7 +22,7 @@ export default function PostDetails({ params }) {
       const snap = await getDoc(ref);
 
       if (snap.exists()) {
-        setPost(snap.data());
+        setPost(snap.data() as Post);
       }
     };
 
@@ -29,16 +37,21 @@ export default function PostDetails({ params }) {
     );
 
   return (
-    <div className="min-h-screen bg-gray-100 p-5">
-      <div className="max-w-xl mx-auto bg-white p-6 rounded-md shadow">
-        <h1 className="text-2xl font-bold mb-2">{post.title}</h1>
-        <p className="text-gray-700 mb-4">{post.content}</p>
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 p-5 transition-all">
+      <div className="max-w-xl mx-auto bg-white dark:bg-gray-800 p-6 rounded-md shadow border dark:border-gray-700">
+        <h1 className="text-2xl font-bold mb-2 text-gray-900 dark:text-white">
+          {post.title}
+        </h1>
 
-        <p className="text-sm text-gray-500">
-          Posted by: {post.author || "Unknown"}  
+        <p className="text-gray-700 dark:text-gray-300 mb-4">
+          {post.content}
         </p>
 
-        <p className="text-xs text-gray-400 mt-2">
+        <p className="text-sm text-gray-600 dark:text-gray-400">
+          Posted by: {post.author || "Unknown"}
+        </p>
+
+        <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
           Post ID: {id}
         </p>
       </div>

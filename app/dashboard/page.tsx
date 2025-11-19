@@ -7,7 +7,8 @@ import Link from "next/link";
 import { signOut } from "firebase/auth";
 
 export default function Dashboard() {
-  const [posts, setPosts] = useState([]);
+  // FIX: add type to avoid Vercel build error
+  const [posts, setPosts] = useState<any[]>([]);
   const [theme, setTheme] = useState("light");
 
   // Load posts in realtime
@@ -18,7 +19,7 @@ export default function Dashboard() {
         id: doc.id,
         ...doc.data(),
       }));
-      setPosts(data);
+      setPosts(data); // <-- fixed
     });
     return () => unsubscribe();
   }, []);
@@ -88,7 +89,9 @@ export default function Dashboard() {
         {/* Posts List */}
         <div className="space-y-4">
           {posts.length === 0 && (
-            <p className="text-center text-gray-500 dark:text-gray-300">No posts yet...</p>
+            <p className="text-center text-gray-500 dark:text-gray-300">
+              No posts yet...
+            </p>
           )}
 
           {posts.map((post) => (
