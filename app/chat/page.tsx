@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import type { User } from "firebase/auth";
 import { auth, db } from "@/firebase/firebaseConfig";
 import {
   addDoc,
