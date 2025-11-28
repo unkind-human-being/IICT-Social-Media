@@ -1,14 +1,12 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import type { User } from "firebase/auth";
-import { auth, db } from "@/firebase/firebaseConfig";
+import { useEffect, useState, useRef } from "react";
+import { useParams } from "next/navigation";
+import { db, auth } from "@/firebase/firebaseConfig";
 import {
-  addDoc,
-  collection,
-  serverTimestamp,
-  query,
-  orderBy,
+  doc,
+  setDoc,
+  arrayUnion,
   onSnapshot,
 } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
@@ -38,70 +36,80 @@ async function uploadToCloudinary(file: File) {
   return res.json();
 }
 
-export default function ChatPage() {
-  const [user, setUser] = useState<User | null>(null);
+export default function RoomChat() {
+  const { roomId } = useParams();
+
+  const [user, setUser] = useState<any>(null);
   const [messages, setMessages] = useState<any[]>([]);
-  const [input, setInput] = useState("");
+  const [text, setText] = useState("");
   const [uploading, setUploading] = useState(false);
 
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
   // -----------------------------------------------------
-  // WATCH USER LOGIN
-  // -----------------------------------------------------
-  useEffect(() =>
-    onAuthStateChanged(auth, (currentUser) =>
-      setUser(currentUser as User | null)
-    )
-  );
-
-  // -----------------------------------------------------
-  // LOAD MESSAGES REALTIME
+  // WATCH AUTH
   // -----------------------------------------------------
   useEffect(() => {
-    const q = query(collection(db, "chat"), orderBy("createdAt", "asc"));
+    onAuthStateChanged(auth, (u) => setUser(u));
+  }, []);
 
-    return onSnapshot(q, (snap) => {
-      const arr = snap.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setMessages(arr);
+  // -----------------------------------------------------
+  // LOAD MESSAGES
+  // -----------------------------------------------------
+  useEffect(() => {
+    if (!roomId) return;
+
+    const ref = doc(db, "chatRooms", roomId as string);
+
+    return onSnapshot(ref, async (snap) => {
+      if (snap.exists()) {
+        setMessages(snap.data().messages || []);
+      } else {
+        await setDoc(ref, { messages: [] }, { merge: true });
+      }
 
       setTimeout(() => {
         bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-      }, 100);
+      }, 150);
     });
-  }, []);
+  }, [roomId]);
 
   // -----------------------------------------------------
   // SEND MESSAGE
   // -----------------------------------------------------
   const sendMessage = async (extra: any = {}) => {
-    if (!input.trim() && !extra.image && !extra.file) return;
+    if (!user) return alert("Login first!");
+    if (!text.trim() && !extra.image && !extra.file) return;
 
-    await addDoc(collection(db, "chat"), {
-      text: input,
-      ...extra,
-      name: user?.displayName || "Unknown",
-      uid: user?.uid || "",
-      createdAt: serverTimestamp(),
-    });
+    const ref = doc(db, "chatRooms", roomId as string);
 
-    setInput("");
+    await setDoc(
+      ref,
+      {
+        messages: arrayUnion({
+          id: crypto.randomUUID(),
+          text: text.trim(),
+          ...extra,
+          author: user.displayName || user.email,
+          uid: user.uid,
+          createdAt: Date.now(),
+        }),
+      },
+      { merge: true }
+    );
+
+    setText("");
   };
 
   // -----------------------------------------------------
-  // HANDLE UPLOAD (IMAGE/FILE)
+  // UPLOAD FILE / IMAGE
   // -----------------------------------------------------
   const handleUpload = async (e: any) => {
     const file = e.target.files[0];
     if (!file) return;
 
     setUploading(true);
-
     const result = await uploadToCloudinary(file);
-
     setUploading(false);
 
     if (result.secure_url) {
@@ -115,13 +123,13 @@ export default function ChatPage() {
   };
 
   // -----------------------------------------------------
-  // NO USER → show login message
+  // LOGIN REQUIRED
   // -----------------------------------------------------
   if (!user)
     return (
       <div className="min-h-screen flex items-center justify-center bg-black text-white">
         <p className="text-xl animate-pulse">
-          Please login to access the chat…
+          Please login to access the room…
         </p>
       </div>
     );
@@ -132,34 +140,39 @@ export default function ChatPage() {
   return (
     <main className="min-h-screen flex bg-gradient-to-br from-[#09090b] via-[#1e1b4b] to-[#0f172a] text-white">
 
-      {/* LEFT SIDEBAR (STICKY) */}
+      {/* LEFT SIDEBAR */}
       <aside className="w-64 h-screen sticky top-0 bg-black/40 backdrop-blur-xl border-r border-white/10 p-5 hidden md:block overflow-y-auto">
 
         <h2 className="text-xl font-bold mb-4 text-purple-400">Chat Rooms</h2>
 
         <div className="space-y-3">
-
           <Link href="/chat">
-            <div className="p-3 rounded-lg bg-purple-700/40 border border-purple-500/50 cursor-pointer hover:bg-purple-700/60 hover:scale-[1.02] transition">
-              🌍 <span className="font-semibold">World Chat</span>
+            <div className="p-3 rounded-lg bg-white/10 border border-white/20 cursor-pointer hover:bg-white/20 transition">
+              🌍 World Chat
             </div>
           </Link>
 
           {["room1", "room2", "room3", "room4", "room5", "room6"].map((room) => (
             <Link key={room} href={`/chat/${room}`}>
-              <div className="p-3 rounded-lg bg-white/10 border border-white/20 cursor-pointer hover:bg-white/20 hover:scale-[1.02] transition">
-                💬 <span className="font-semibold">{room.toUpperCase()}</span>
+              <div
+                className={`p-3 rounded-lg border cursor-pointer transition ${
+                  room === roomId
+                    ? "bg-purple-700/40 border-purple-500/50"
+                    : "bg-white/10 border-white/20 hover:bg-white/20"
+                }`}
+              >
+                💬 {room.toUpperCase()}
               </div>
             </Link>
           ))}
         </div>
       </aside>
 
-      {/* CHAT PANEL */}
+      {/* MAIN CHAT PANEL */}
       <section className="flex-1 p-4 flex flex-col">
 
         <h1 className="text-3xl font-extrabold text-center mb-4 drop-shadow-lg">
-          🚀 IICT World Chat
+          🔥 Room {roomId}
         </h1>
 
         {/* CHAT MESSAGES */}
@@ -177,27 +190,25 @@ export default function ChatPage() {
                       : "bg-white/20 backdrop-blur text-white rounded-bl-none"
                   }`}
                 >
-                  <p className="text-sm font-semibold">{msg.name}</p>
+                  <p className="text-sm font-semibold mb-1">{msg.author}</p>
 
-                  {msg.text && <p className="mt-1">{msg.text}</p>}
+                  {msg.text && <p className="mb-2">{msg.text}</p>}
 
-                  {/* IMAGE */}
                   {msg.image && (
                     <a href={msg.image} target="_blank">
                       <img
                         src={msg.image}
-                        className="mt-3 rounded-xl border border-white/20 max-h-60 hover:scale-[1.02] transition"
+                        className="rounded-lg max-h-60 border border-white/20 hover:scale-105 transition"
                       />
                     </a>
                   )}
 
-                  {/* FILE */}
                   {msg.file && (
                     <a
                       href={msg.file}
                       target="_blank"
                       download={msg.fileName}
-                      className="mt-2 block text-blue-300 underline text-sm"
+                      className="text-blue-300 underline text-sm"
                     >
                       📄 {msg.fileName}
                     </a>
@@ -215,28 +226,30 @@ export default function ChatPage() {
           <input
             type="text"
             placeholder="Type a message..."
-            className="flex-1 p-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/40 outline-none focus:ring-2 focus:ring-blue-500"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
+            className="flex-1 p-3 rounded-xl border border-white/30 bg-white/10 outline-none text-white placeholder-white/40 focus:ring-2 focus:ring-purple-500"
+            value={text}
+            onChange={(e) => setText(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && sendMessage()}
           />
 
           <button
             onClick={() => sendMessage()}
-            className="px-6 py-3 bg-blue-600 rounded-xl shadow-lg hover:bg-blue-700 hover:scale-105 transition"
+            className="px-6 py-3 bg-purple-600 rounded-xl shadow-lg hover:bg-purple-700 hover:scale-105 transition"
           >
             🚀
           </button>
         </div>
 
-        {/* UPLOAD BUTTON */}
+        {/* UPLOAD FILE */}
         <div className="mt-4">
-          <label className="cursor-pointer px-5 py-3 bg-purple-600 rounded-xl shadow-lg hover:bg-purple-700 transition inline-flex items-center gap-2">
-            📎 Upload Image/File
+          <label className="cursor-pointer px-5 py-3 bg-blue-600 rounded-xl shadow-lg hover:bg-blue-700 transition inline-flex items-center gap-2">
+            📎 Upload File
             <input type="file" className="hidden" onChange={handleUpload} />
           </label>
 
-          {uploading && <span className="ml-3 text-gray-300">Uploading…</span>}
+          {uploading && (
+            <span className="ml-3 text-gray-300">Uploading…</span>
+          )}
         </div>
 
       </section>
