@@ -55,21 +55,28 @@ export default function Dashboard() {
           </h1>
 
           <div className="flex gap-3">
-            {/* Dark Mode Button */}
 
-            <Link href="/chat">
-              <button className="bg-green-600 hover:bg-green-700 text-white px-4 py-1 rounded-lg shadow transition-all hover:scale-105">
-                Chat
-              </button>
-            </Link>
+  <Link href="/chat">
+    <button className="bg-green-600 hover:bg-green-700 text-white px-4 py-1 rounded-lg shadow transition">
+      Chat
+    </button>
+  </Link>
 
-            <button
-              onClick={logout}
-              className="bg-red-500 hover:bg-red-600 text-white px-4 py-1 rounded-lg shadow transition-all hover:scale-105"
-            >
-              Logout
-            </button>
-          </div>
+  <Link href="/projects-dashboard">
+    <button className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-1 rounded-lg shadow transition">
+      School Projects
+    </button>
+  </Link>
+
+  <button
+    onClick={logout}
+    className="bg-red-500 hover:bg-red-600 text-white px-4 py-1 rounded-lg shadow transition"
+  >
+    Logout
+  </button>
+
+</div>
+
         </div>
 
         {/* Add Post Button */}
